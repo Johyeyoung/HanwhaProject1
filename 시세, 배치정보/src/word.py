@@ -25,7 +25,7 @@ if __name__ == "__main__":
 
     from specInfo import *
 
-    main_path = 'C:/Users/USER/Downloads/mm/자료/시세, 배치정보'
+    main_path = '..'
     excel = MetaData()
 
     with pd.ExcelWriter('INFO.xlsx') as writer:

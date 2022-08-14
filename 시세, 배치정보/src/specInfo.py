@@ -94,7 +94,7 @@ class MetaData:
 if __name__ == "__main__":
     # 경로 설정
     import os
-    main_path = 'C:/Users/USER/Downloads/mm/자료/시세, 배치정보'
+    main_path = '..'
     feed_spec = os.path.join(main_path, "feed spec/KOSPI200지수옵션_실시간_UDP(12M)_1.550_2022080301.xls")
 
     # Get SPEC Info
@@ -112,13 +112,11 @@ if __name__ == "__main__":
     futureDf, futureDict = specdata.getSpecInfoBySubstr('선물')
     optionDf, optionDict = specdata.getSpecInfoBySubstr('옵션')
     equityDf, equityDict = specdata.getSpecInfoBySubstr('현물')
-    '''
-        saveDict['선물_TR명'] = futureDict.keys()
-        saveDict['옵션_TR명'] = optionDict.keys()
-        saveDict['현물_TR명'] = equityDict.keys()
-    '''
+    spec_df, spec_dict = specdata.getSpecInfoByDirectory(main_path + '/feed spec')
+    tr_df = specdata.getTrInfoByDirectory(main_path + '/feed spec')
 
-
+    saveDict['SPEC'] = spec_df
+    saveDict['TR'] = tr_df
     saveDict['선물_항목명'] = futureDf.value_counts(subset=['항목명'])
     saveDict['옵션_항목명'] = optionDf.value_counts(subset=['항목명'])
     saveDict['현물_항목명'] = equityDf.value_counts(subset=['항목명'])
