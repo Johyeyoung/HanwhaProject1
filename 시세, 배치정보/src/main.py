@@ -39,8 +39,8 @@ if __name__ == "__main__":
                     byte_line = line.encode('euc-kr')
                     mark = byte_line[idx: idx + int(_len)]
                     idx += int(_len)
-                    if name not in ['종목코드', '기초자산종목코드', 'ATM구분코드', '만기일']:
-                         continue
+                    if name not in ['종목코드', '기초자산종목코드', 'ATM구분코드', '만기일', '행사가격', '기준가', '종목한글']:
+                       continue
                     sub_result[name] = mark.decode('euc-kr').rstrip()
                 total_result[trCd].append(sub_result)  # 결과를 저장하는 곳
                 trNm = None

@@ -64,10 +64,13 @@ class OptionObject:
         self.insCd = None
         self.matDt = None
         self.atmCd = None
+        self.strike = None
+        self.putcall = None
         self.mappDataWithfield()
 
     def metaInfoManager(self):  # metaData를 관리하는 곳
-        metaData = {'종목코드': "inisCd", '종목한글명': "inisNm", '기초자산종목코드': 'insCd', '만기일자': 'matDt', 'ATM구분코드': 'atmCd'}
+        metaData = {'종목코드': "inisCd", '종목한글명': "inisNm", '기초자산종목코드': 'insCd', \
+                    '만기일자': 'matDt', 'ATM구분코드': 'atmCd', '행사가격': 'strike'}
         return metaData
 
     # 메타정보에 맞춰 rawData와 변수를 매핑해주는 곳
@@ -125,7 +128,7 @@ class OptionLoader:
         self.stockBatchLog, self.stockCdNm = self.batchData.convertBatchLog(opStockTrcd)
 
     # 특정 기초자산의 월물에 대한 정보를 담는 곳
-    def getMaturitylist(self, insId, atmCd=None, _date=None):
+    def getMaturitylist2(self, insId, atmCd=None, _date=None):
         date = _date if _date else datetime.today().strftime("%Y%m%d")
         self.matList = list()
         for inisCd, value in self.stockBatchLog.items():
@@ -135,17 +138,33 @@ class OptionLoader:
         matList = sorted(self.matList, key=lambda x: x[1])  # (inisCd, 만기일자)로 이뤄진 리스트를 만기일자를 기준으로 정렬
         return matList
 
+    def getMaturitylist(self, insId, atmCd=None, _date=None):
+        date = _date if _date else datetime.today().strftime("%Y%m%d")
+        self.matList = defaultdict(list)
+        for inisCd, value in self.stockBatchLog.items():
+            # 기초자산종목코드, atm구분코드 까지만 하면 유니크함 여기서 만기일자만 미정
+            if value['기초자산종목코드'] == insId and value['ATM구분코드'] == str(atmCd) and value['만기일자'] > date:
+                optionOBJ = OptionObject(value)
+                optionOBJ.putcall = value['종목한글약명'][0]
+                self.matList[value['만기일자']].append(optionOBJ)
+        for v in self.matList.values(): # 내부에서는 행사가 기준으로 정렬
+            v.sort(key=lambda x: x.strike)
+        matList = sorted(self.matList.items(), key=lambda x: x[0])  # 만기일자, 행사 기준으로 정렬
+        return matList
+
+    def getPosition(self):
+        pass
+
     def stockInfo(self, insId=None, matidx=None, atmCd=None):
         matList = self.getMaturitylist(insId, atmCd)
-
+        # [('만기일자', [option1, option2, ... ]), ... ]
         if len(matList) == 0:
             return "종목정보가 없습니다."
 
         if matidx == 'last' or matidx == -1:  # 원월물 인덱스 자동 설정
             matidx = len(matList)-1
-        inisCd = matList[matidx][0]  # (inisCd, value['만기일자'], value['ATM구분코드'])
-        optionObject = OptionObject(self.stockBatchLog[inisCd])
-        return optionObject
+        matDt, optionObj_call, optionObj_put = matList[matidx][0], matList[matidx][1][0], matList[matidx][1][1]
+        return optionObj_call, optionObj_put
 
 
 class FutureLoader:
@@ -214,12 +233,12 @@ if __name__ == "__main__":
     # futureLoader = FutureLoader(batchpath=feed_file, specpath=feed_spec)
     # equityLoader = EquityLoader(batchpath=feed_file, specpath=feed_spec)
 
-    option = optionLoader.stockInfo('KR7005930003', 0, 1)  # 기초자산ID, 월물정보드 KR7005930003
+    optionObj_call, optionObj_put = optionLoader.stockInfo('KR7005930003', 0, 1)  # 기초자산ID, 월물정보드 KR7005930003
     # future = futureLoader.stockInfo('KR4101S90005')  # 기초자산ID, 월물정보
     # equity = equityLoader.stockInfo('HK0000057197')
     # equity_nm = equityLoader.stockInfo('이스트아시아홀딩스')
 
-    print(option.inisCd, option.inisNm)
+    print(optionObj_call.inisCd, optionObj_call.inisNm, optionObj_put.inisCd, optionObj_put.inisNm)
     # print(future.inisCd, future.inisNm)
     # print(equity.inisCd, equity.inisNm)
     # print(equity_nm.inisCd, equity_nm.inisNm)
@@ -232,13 +251,16 @@ if __name__ == "__main__":
   * 현물의 경우 종목코드나 종목명이 주어지면 종목정보를 반환
 
   * 파생상품의 경우 기초자산ID, 월물 정보 (옵션의 경우 OTM, ITM, ATM 몇번째인지까지)가 주어지면 종목정보를 반환
+  ATM구분코드   예) 0:선물, 1:ATM, 2:ITM, 3:OTM
+  기준가	 예) 9999999999.99
+행사가격	 예) 999999999.99999999
 
   * 기타 자주 사용하는 기능 구현 
-  (근월물 요청, 0
-  원월물 요청, 0
+  (근월물 요청, -> 0 입력시
+  원월물 요청, -> last or -1 입력시 
   ATM Option,  
-  행사가순 옵션 리스트, 
-  반대편 옵션 (콜 -> 풋, 풋 -> 콜) 
+  행사가순 옵션 리스트, -> 기초자산, atm 같다는 가정하에?
+  반대편 옵션 (콜 -> 풋, 풋 -> 콜) -> 파라미터
   등)
 
 - 소과제 2 : 종목정보 DB에 저장
