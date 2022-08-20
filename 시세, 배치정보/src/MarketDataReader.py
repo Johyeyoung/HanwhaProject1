@@ -7,62 +7,76 @@ from DTO import *
 from DAO import *
 
 
+
 class BatchlogManager:
-    def __init__(self, batchpath, specpath):
+    def __init__(self, batchpath, metadata_path):
         self.batchpath = batchpath
-        self.specpath = specpath
-        self.specInfo = MetaData()
-        self.makeSpecData()
+        self.metadata_path = metadata_path
 
-    # spec 정보를 만드는 부분
-    def makeSpecData(self):
-        self.specInfo.getSpecInfoByDirectory(self.specpath)
-        self.specInfo.getTrInfoByDirectory(self.specpath)
+    # TR코드와 SPEC 정보를 산출하는 부분
+    def getSpecInfo(self, metadata_path):
+        specInfo = MetaData()
+        specInfo.getSpecInfoByDirectory(metadata_path)
+        specInfo.getTrInfoByDirectory(metadata_path)
+        return specInfo
 
-    def convertBatchlogToJson(self, trcdlst=None, inisType=None):
-        convertedBatchLog = defaultdict(dict)
-        mapCdToNm = dict()
-        with open(self.batchpath, encoding='cp949') as f:
-            for line in f:
-                trCd, trNm, idx, sub_result = line[9:14], None, 9, dict()
-                if trCd in trcdlst:
-                    try:
-                        trNm = self.specInfo.totalTrDict[trCd]['TR명']
-                    except:
-                        print(f'코드\'{trCd}\'의 정보가 없습니다.')
-                        continue
+    def bulkinsertDAL(self, total_result, inisType):
+        for key, sub_result in total_result.items():
+            if inisType == 'OP':
+                dto = OptionDTO(sub_result)
+                dao = OptionDAO(dto)
+            elif inisType == 'FU':
+                dto = FutureDTO(sub_result)
+                dao = FutureDAO(dto)
+            elif inisType == 'EQ':
+                dto = EquityDTO(sub_result)
+                dao = EquityDAO(dto)
 
-                    for name, _len in self.specInfo.totalSpecDict[trNm]:
-                        byte_line = line.encode('euc-kr')
-                        mark = byte_line[idx: idx + int(_len)]
-                        sub_result[name] = mark.decode('euc-kr').rstrip()
-                        if name == '종목코드':
-                            insCd = sub_result[name]
-                        if name in ('종목한글명', '한글종목명', '종목한글약명'):
-                            insNm = sub_result[name]
-                            mapCdToNm[insNm] = insCd # 이름을 키 값으로 저장, 더 빠르게 조회
-                        idx += int(_len)
+            db.session.add(dao)
 
-                    #convertedBatchLog[trCd][insCd] = sub_result  # 결과를 저장하는 곳 TR의 정보를 굳이 저장할 필요가 없음
-                    convertedBatchLog[insCd] = sub_result  # 결과를 저장하는 곳
-
-                    if inisType == 'OP':
-                        dto = OptionDTO(sub_result)
-                        dao = OptionDAO(dto)
-                    elif inisType == 'FU':
-                        dto = FutureDTO(sub_result)
-                        dao = FutureDAO(dto)
-                    elif inisType == 'EQ':
-                        dto = EquityDTO(sub_result)
-                        dao = EquityDAO(dto)
-
-                    db.session.add(dao)
         try:
             db.session.commit()
         except:
             print("중복된 데이터가 존재합니다.")
+            db.session.rollback()
             pass
-        return convertedBatchLog, mapCdToNm
+
+    def provideParsingdata(self, line, metainfoDict, start_idx=0):
+        idx, result, inisCd, inisNm = start_idx, dict(), None, None
+        for key, v_len in metainfoDict:
+            byte_line = line.encode('euc-kr')
+            value = byte_line[idx: idx + int(v_len)]
+            result[key] = value.decode('euc-kr').rstrip()
+            idx += int(v_len)
+            if key == '종목코드':
+                inisCd = result[key]
+            if key in ('종목한글명', '한글종목명', '종목한글약명'):
+                inisNm = result[key]
+        return result, inisCd, inisNm
+
+    # 실제로 SPEC를 토대로 배치파일의 내용을 파싱하는 부분
+    def run(self, trcdlst=None, inisType=None):
+        total_Result = defaultdict(dict)
+        metaCdNm = dict()
+        specInfo = self.getSpecInfo(self.metadata_path)
+
+        with open(self.batchpath, encoding='cp949') as f:
+            for line in f:
+                try:
+                    trCd = line[9:14] if line[9:14] in trcdlst else None
+                    trNm = specInfo.totalTrDict[trCd]['TR명']
+                except:
+                    #print(f'코드\'{line[9:14]}\'의 정보가 없습니다.')
+                    continue
+                metaInfo = specInfo.totalSpecDict[trNm]
+                sub_result, inisCd, inisNm = self.provideParsingdata(line, metaInfo, 9)
+                metaCdNm[inisNm] = inisCd  # 이름을 키 값으로 저장, 더 빠르게 조회
+                total_Result[inisCd] = sub_result  # 결과를 저장하는 곳
+
+        self.bulkinsertDAL(total_Result, inisType)
+        return total_Result, metaCdNm
+
+
 
 
 class OptionLoader:
@@ -73,26 +87,51 @@ class OptionLoader:
 
     def getBatchlog(self):
         opStockTrcd = ['A0184', 'A0034', 'A0025', 'A0134', 'A0174']
-        self.stockBatchLog, self.stockCdNm = self.batchlogManager.convertBatchlogToJson(opStockTrcd, 'OP')
+        self.stockBatchLog, self.stockCdNm = self.batchlogManager.run(opStockTrcd, 'OP')
 
-    def getMaturitylist(self, insId, callput, atmCd=None, _date=None): # atmcd = O1, I2, A2
-        date = _date if _date else datetime.today().strftime("%Y%m%d")
-        self.matList = defaultdict(list)
+    def getOptionList(self, basedate=None):
+#        optionList = db.session.execute(select(OptionDAO).where(OptionDAO.inisType == 'OP'))
+        # #print(x["OptionDAO"])
+        optionList = db.session.query(OptionDAO)
+        return optionList
+
+    # 여기는 객체의 정보를 가지고 와서 연산
+    def getMaturitylist2(self, insId, callput, atmCd=None, _date=None): # atmcd = O1, I2, A2
+        baseDt = _date if _date else datetime.today().strftime("%Y%m%d")
+        matList = defaultdict(list)
         var_CP = '42' if callput == 'C' else '43'  # call, put 관리
         var_ATM = 3 if atmCd[0] == 'O' else 2 if atmCd[0] == 'I' else 1   # 0:선물, 1:ATM, 2:ITM, 3:OTM
-        for inisCd, value in self.stockBatchLog.items():
+        for value in self.stockBatchLog.values(): # 데이터를 가져오는 부분에서 객체로 가져와야됨
             if value['기초자산종목코드'] == insId and value['종목코드'][2:4] == var_CP \
-                and value['ATM구분코드'] == str(var_ATM) and value['만기일자'] > date:
-                optionOBJ = OptionDTO(value)
-                self.matList[value['만기일자']].append(optionOBJ)
+                and value['ATM구분코드'] == str(var_ATM) and value['만기일자'] > baseDt:
+                optionDTO = OptionDTO(value)
+                matList[value['만기일자']].append(optionDTO)
 
         # 내부에서는 행사가 기준으로 정렬
         revs = True if atmCd[0] == 'O' else False
-        for v in self.matList.values():
+        for v in matList.values():
             v.sort(key=lambda x: x.strike, reverse=revs)
-        matList = sorted(self.matList.items(), key=lambda x: x[0])  # 만기일자, 행사가 기준 정렬
+        sorted_matList = sorted(matList.items(), key=lambda x: x[0])  # 만기일자, 행사가 기준 정렬
         # [('만기일자', [option1, option2, ... ]), ... ]
-        return matList
+        return sorted_matList
+
+    def getMaturitylist(self, insId, postype, atmCd=None, _date=None): # atmcd = O1, I2, A2
+        baseDt = _date if _date else datetime.today().strftime("%Y%m%d")
+        var_ATM = 3 if atmCd[0] == 'O' else 2 if atmCd[0] == 'I' else 1   # 0:선물, 1:ATM, 2:ITM, 3:OTM
+        matList = defaultdict(list)
+        optionDTO_list = self.getOptionList()
+        for optionDTO in optionDTO_list:
+            if optionDTO.insId == insId and optionDTO.posType == postype \
+                    and optionDTO.atmCd == str(var_ATM) and optionDTO.matDt > baseDt:
+                matList[optionDTO.matDt].append(optionDTO)
+
+        # 내부에서는 행사가 기준으로 정렬
+        revs = True if atmCd[0] == 'O' else False
+        for v in matList.values():
+            v.sort(key=lambda x: x.strike, reverse=revs)
+        sorted_matList = sorted(matList.items(), key=lambda x: x[0])  # 만기일자, 행사가 기준 정렬
+        # [('만기일자', [option1, option2, ... ]), ... ]
+        return sorted_matList
 
     def stockInfoByOtherInfo(self, insId=None, matidx=None, callput=None, atmCd=None):
         try:
@@ -126,8 +165,8 @@ class OptionLoader:
 
     def getStockInfo(self, _input):
         inisCd = self.getInisCd(_input)
-        optionObject = OptionDTO(self.stockBatchLog[inisCd])
-        return optionObject
+        optionDTO = OptionDTO(self.stockBatchLog[inisCd])
+        return optionDTO
 
     # 특정 종목의 반대편 옵션 주기
     def getOpstPosition(self, inisCd):
@@ -138,7 +177,7 @@ class OptionLoader:
             return
         for inisCd, value in self.stockBatchLog.items():
             target = OptionDTO(value)
-            if target.insCd == optionObj.insCd and target.posType != optionObj.posType\
+            if target.insId == optionObj.insId and target.posType != optionObj.posType\
                 and target.matDt == optionObj.matDt and target.strike == optionObj.strike:
                 return OptionDTO(value)
 
@@ -151,7 +190,7 @@ class FutureLoader:
 
     def getBatchlog(self):
         fuStockTrcd = ['A0014', 'A0164', 'A0015', 'A0124', 'A0094', 'A0104', 'A0024']
-        self.stockBatchLog, self.stockCdNm = self.batchlogManager.convertBatchlogToJson(fuStockTrcd, 'FU')
+        self.stockBatchLog, self.stockCdNm = self.batchlogManager.run(fuStockTrcd, 'FU')
 
     # 특정 기초자산의 월물에 대한 정보를 담는 곳
     def getMaturitylist(self, insId, _date=None):
@@ -182,7 +221,7 @@ class EquityLoader:
 
     def getBatchlog(self):
         eqStockTrcd = ['A0011', 'A0012']
-        self.stockBatchLog, self.stockCdNm = self.batchlogManager.convertBatchlogToJson(eqStockTrcd, 'EQ')
+        self.stockBatchLog, self.stockCdNm = self.batchlogManager.run(eqStockTrcd, 'EQ')
 
     def getInsCd(self, _input):
         insCdType = re.compile(r'[a-zA-Z0-9]*').search(_input).group()
@@ -220,13 +259,16 @@ if __name__ == "__main__":
         # equity = equityLoader.stockInfo('HK0000057197')
         # equity_nm = equityLoader.stockInfo('이스트아시아홀딩스')
 
-        print(option.inisCd, option.inisNm)
+        #print(option.inisCd, option.inisNm)
         print(optionList)
         print(position.inisCd, position.inisNm, position.strike)
         print(opstposition.inisCd, opstposition.inisNm, position.strike)
         # print(future.inisCd, future.inisNm)
         # print(equity.inisCd, equity.inisNm)
         # print(equity_nm.inisCd, equity_nm.inisNm)
+
+        optionList = db.session.execute(select(OptionDAO).where(OptionDAO.inisType == 'OP')).all()
+
 
     '''
     # 과제 2 : 종목정보 모듈 제작

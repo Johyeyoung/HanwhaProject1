@@ -4,7 +4,7 @@ class OptionDTO:
         self.inisType = 'OP'
         self.inisCd = None
         self.inisNm = None
-        self.insCd = None
+        self.insId = None
         self.matDt = None
         self.atmCd = None
         self.strike = None
@@ -16,7 +16,7 @@ class OptionDTO:
     def metaInfoManager(self):  # metaData를 관리하는 곳
         metaData = {'종목코드': "inisCd",
                     '종목한글명': "inisNm",
-                    '기초자산종목코드': 'insCd',
+                    '기초자산ID': 'insId',
                     '만기일자': 'matDt',
                     'ATM구분코드': 'atmCd',
                     '행사가격': 'strike',
@@ -29,7 +29,7 @@ class OptionDTO:
         for key, value in metaData.items():
             exec(f'self.{value} = \'{self.rawData[key]}\'')
 
-        self.posType = 'C' if self.inisCd and self.inisCd[2:4] == '42' else '43'  # call, put 관리
+        self.posType = 'C' if self.inisCd and self.inisCd[2:4] == '42' else 'P'  # call, put 관리
         if self.strike: self.strike = '{:,.8f}'.format(float(int(self.strike)/100000000))
 
 
@@ -39,7 +39,7 @@ class FutureDTO:
         self.inisType = 'FU'
         self.inisCd = None
         self.inisNm = None
-        self.insCd = None
+        self.insId = None
         self.matDt = None
         self.baseDt = None
         self.mapDataWithfield()
@@ -47,7 +47,7 @@ class FutureDTO:
     def getMetaInfo(self):
         metaData = {'종목코드': "inisCd",
                     '종목한글명': "inisNm",
-                    '기초자산종목코드': 'insCd',
+                    '기초자산ID': 'insId',
                     '만기일자': 'matDt',
                     '영업일자(입회일자)': 'baseDt'}
 
