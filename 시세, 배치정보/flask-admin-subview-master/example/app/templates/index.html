@@ -1,0 +1,40 @@
+{% extends 'layout.html' %}
+
+{% block body %}
+    <div class="row">
+        <div class="col-lg-12">
+            <h3>Finance Data Application</h3>
+            <p>'시세 및 배치 정보' 에서 제공되는 데이터는 다음과 같습니다.</p>
+            <ul>
+                <li>거래관리 페이지: Live딜을 상세 조회할 수 있습니다.</li>
+                <li>기초자산 관리 페이지: Live딜이 가지고 있는 기초자산의 목록을 조회할 수 있습니다.</li>
+            </ul>
+        </div>
+    </div>
+    <div class="row">
+        <div class="col-lg-12">
+            <h3>Today Option</h3>
+            <div data-type="subview" data-subview="/option_subview/?sort=1&desc=1&page_size=5"></div>
+        </div>
+    </div>
+    <div class="row">
+        <div class="col-lg-12">
+            <h3>Today Future</h3>
+            <div data-type="subview" data-subview="/future_subview/?sort=2&desc=1&page_size=5"></div>
+        </div>
+    </div>
+    <div class="row">
+        <div class="col-lg-12">
+            <h3>Today Equity</h3>
+            <div data-type="subview" data-subview="/equity_subview/?sort=3&desc=1&page_size=5"></div>
+        </div>
+    </div>
+{% endblock %}
+
+{% block tail_js %}
+    <script src="{{ admin_static.url(filename='vendor/jquery.min.js', v='2.1.4') }}" type="text/javascript"></script>
+    <script src="{{ admin_static.url(filename='bootstrap/{}/js/bootstrap.min.js'.format(Subview.template_mode), v='3.3.5') }}"
+            type="text/javascript"></script>
+    <script src="{{ admin_static.url(filename='vendor/moment.min.js', v='2.9.0') }}" type="text/javascript"></script>
+    <script type="text/javascript" src="{{ Subview.js_url() }}"></script>
+{% endblock %}

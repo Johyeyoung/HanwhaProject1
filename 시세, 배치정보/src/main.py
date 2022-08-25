@@ -31,7 +31,10 @@ if __name__ == "__main__":
 
                 # 특정 종목 코드만 필터링
                 opStockTrcd = ['A0184', 'A0034', 'A0025', 'A0134', 'A0174']
-                if trCd not in opStockTrcd: continue
+                eqStockTrcd = ['A0011', 'A0012']
+                fuStockTrcd = ['A0014', 'A0164', 'A0015', 'A0124', 'A0094', 'A0104', 'A0024']
+
+                if trCd not in eqStockTrcd: continue
 
                 for name, _len in totalSpec[trNm]:
                     byte_line = line.encode('euc-kr')

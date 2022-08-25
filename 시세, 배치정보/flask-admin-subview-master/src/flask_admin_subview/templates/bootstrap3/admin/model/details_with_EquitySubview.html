@@ -1,0 +1,103 @@
+{% extends 'admin/model/details.html' %}
+
+   {% block details_search %}
+        <div class="input-group fa_filter_container col-lg-6">
+            {% set color = "success" if get_value(model, 'status') == "Live" else "danger" %}
+            <span class="input-group-addon" ><b>STATUS</b></span>
+            <input type="text" class="btn btn-{{color}}" value="{{ get_value(model, 'status')}}">
+        </div>
+
+        <div style="float:right;">
+            <form action="." method="get">
+              <label class="control-label">기준일자: </label>
+              <input type="hidden" name="id" value="{{ get_value(model, 'inisCd')}}">
+              <input type="date" name="baseDt" value="{{ get_value(model, 'baseDt')}}">
+              <input type="submit" value="조회">
+            </form>
+        </div>
+  {% endblock %}
+
+
+<!--여기가 딜의 상세페이지를 만드는 곳-->
+{% block details_table %}
+<link href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.5/css/bootstrap.min.css" rel="stylesheet">
+<link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.4.1/css/bootstrap.min.css">
+<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.6.0/jquery.min.js"></script>
+<script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.4.1/js/bootstrap.min.js"></script>
+
+<script src="https://ajax.googleapis.com/ajax/libs/jquery/1.11.3/jquery.min.js"></script>
+<script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.5/js/bootstrap.min.js"></script>
+
+
+<div class="container">
+	<h2>종목 정보</h2>
+    <hr>
+	<form class="form-horizontal" role="form">
+	  <div class="form-group">
+	    <label for="inisCd" class="col-sm-2 control-label">종목 코드</label>
+	    <div class="col-sm-4">
+            <button type="button" id="inisCd" class="btn btn-outline-dark">{{ get_value(model, 'inisCd')}}</button>
+	    </div>
+        <label for="inisNm" class="col-sm-1 control-label">종목명</label>
+	    <div class="col-sm-5">
+	      <input type="text" class="form-control" id="inisNm" value="{{ get_value(model, 'inisNm')}}">
+	    </div>
+	  </div>
+
+	  <div class="form-group">
+        <label for="inisType" class="col-sm-2 control-label">종목 분류</label>
+	    <div class="col-sm-3">
+	        <input type="text" class="form-control" id="inisType" disabled="disabled" value="{{ get_value(model, 'inisType') }}">
+	    </div>
+	  </div>
+
+	  <div class="form-group">
+        <label for="matDt" class="col-sm-2 control-label">만기일자</label>
+	    <div class="col-sm-3">
+	      <input type="text" class="form-control" id="matDt" value="{{ get_value(model, 'matDt')}}">
+	    </div>
+          <label for="groupId" class="col-sm-2 control-label">증권그룹ID</label>
+	    <div class="col-sm-2">
+	      <input type="text" class="form-control" disabled="disabled" id="groupId" value="{{ get_value(model, 'groupId')}}">
+	    </div>
+	  </div>
+
+
+	</form>
+</div>
+
+
+<fieldset class="group-border">
+  <legend class="group-border"><h2>Price Info</h2></legend>
+
+
+
+  <div class="row">
+    <div class="col-lg-4">
+      <div class="form-group">
+            <label for="price" class="control-label">기준가</label>
+            <input type="text" class="form-control" id="price" disabled="disabled" value="{{ get_value(model, 'price')}}">
+      </div>
+    </div>
+    <div class="col-lg-4">
+      <div class="form-group">
+        <label for="upPrice" class="control-label">상한가</label>
+        <input type="text" class="form-control" id="upPrice" disabled="disabled" value="{{ get_value(model, 'upPrice')}}">
+      </div>
+    </div>
+    <div class="col-lg-4">
+      <div class="form-group">
+        <label for="lowPrice" class="control-label">하한가</label>
+        <input type="text" class="form-control" id="lowPrice" disabled="disabled" value="{{ get_value(model, 'lowPrice')}}">
+      </div>
+    </div>
+  </div>
+</fieldset>
+
+
+
+
+
+
+{% endblock %}
+

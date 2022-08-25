@@ -1,0 +1,70 @@
+{% extends 'admin/model/details.html' %}
+
+   {% block details_search %}
+  {% endblock %}
+
+
+<!--여기가 딜의 상세페이지를 만드는 곳-->
+{% block details_table %}
+<link href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.5/css/bootstrap.min.css" rel="stylesheet">
+<link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.4.1/css/bootstrap.min.css">
+<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.6.0/jquery.min.js"></script>
+<script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.4.1/js/bootstrap.min.js"></script>
+
+<script src="https://ajax.googleapis.com/ajax/libs/jquery/1.11.3/jquery.min.js"></script>
+<script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.5/js/bootstrap.min.js"></script>
+
+
+<div class="container">
+	<h3>기초자산 정보</h3>
+    <hr>
+	<form class="form-horizontal" role="form">
+
+      <div class="row">
+        <div class="col-lg-4">
+          <div class="form-group">
+                <label for="insId" class="control-label">기초자산ID</label>
+                <input type="text" class="form-control" id="insId" disabled="disabled" value="{{ get_value(model, 'insId')}}">
+          </div>
+        </div>
+        <div class="col-lg-4">
+          <div class="form-group">
+            <label for="insNm" class="control-label">기초자산명</label>
+            <input type="text" class="form-control" id="insNm" disabled="disabled" value="{{ get_value(model, 'insNm')}}">
+          </div>
+        </div>
+      </div>
+
+     <div class="row">
+        <div class="col-lg-4">
+          <div class="form-group">
+                <label for="insPrice" class="control-label">기초자산종가</label>
+                <input type="text" class="form-control" id="insPrice" disabled="disabled" value="{{ get_value(model, 'insPrice')}}">
+          </div>
+        </div>
+        <div class="col-lg-4">
+          <div class="form-group">
+            <label for="baseDt" class="control-label">입수 일자</label>
+            <input type="text" class="form-control" id="baseDt" disabled="disabled" value="{{ get_value(model, 'baseDt')}}">
+          </div>
+        </div>
+      </div>
+
+
+	</form>
+</div>
+
+
+
+<div class="container" id="strikeList" style="margin: 15px 25px 15px 0px;">
+	<h3>Live 종목 리스트</h3>
+    <hr>
+    <ul class="form-group">
+        <li style="color:red;"><h4>해당 기초자산을 가지고 있는 선물, 옵션 목록을 보여줍니다.</h4></li>
+    </ul>
+    <div data-type="subview" data-subview="/strike_subview/?insId={{ get_value(model, 'insId')}}&baseDt={{ get_value(model, 'baseDt')}}">
+    </div>
+</div>
+
+{% endblock %}
+

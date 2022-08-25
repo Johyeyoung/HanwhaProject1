@@ -1,0 +1,200 @@
+{% extends 'admin/model/details.html' %}
+
+   {% block details_search %}
+        <div class="input-group fa_filter_container col-lg-6">
+            {% set color = "success" if get_value(model, 'status') == "Live" else "danger" %}
+            <span class="input-group-addon" ><b>STATUS</b></span>
+            <input type="text" class="btn btn-{{color}}" value="{{ get_value(model, 'status')}}">
+        </div>
+
+        <div style="float:right;">
+            <form action="." method="get">
+              <label class="control-label">기준일자: </label>
+              <input type="hidden" name="id" value="{{ get_value(model, 'inisCd')}}">
+              <input type="date" name="baseDt" value="{{ get_value(model, 'baseDt')}}">
+              <input type="submit" value="조회">
+            </form>
+        </div>
+  {% endblock %}
+
+
+<!--여기가 딜의 상세페이지를 만드는 곳-->
+{% block details_table %}
+<link href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.5/css/bootstrap.min.css" rel="stylesheet">
+<link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.4.1/css/bootstrap.min.css">
+<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.6.0/jquery.min.js"></script>
+<script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.4.1/js/bootstrap.min.js"></script>
+
+<script src="https://ajax.googleapis.com/ajax/libs/jquery/1.11.3/jquery.min.js"></script>
+<script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.5/js/bootstrap.min.js"></script>
+
+
+<div class="container">
+	<h2>종목 정보</h2>
+    <hr>
+	<form class="form-horizontal" role="form">
+	  <div class="form-group">
+	    <label for="inisCd" class="col-sm-2 control-label">종목 코드</label>
+	    <div class="col-sm-4">
+            <button type="button" id="inisCd" class="btn btn-outline-dark">{{ get_value(model, 'inisCd')}}</button>
+	    </div>
+        <label for="inisNm" class="col-sm-1 control-label">종목명</label>
+	    <div class="col-sm-5">
+	      <input type="text" class="form-control" id="inisNm" value="{{ get_value(model, 'inisNm')}}">
+	    </div>
+	  </div>
+
+	  <div class="form-group">
+        <label for="inisType" class="col-sm-2 control-label">종목 분류</label>
+	    <div class="col-sm-4">
+	        <input type="text" class="form-control" id="inisType" disabled="disabled" value="{{ get_value(model, 'inisType') }}">
+	    </div>
+	  </div>
+
+	  <div class="form-group">
+        <label for="insIdHref" class="col-sm-2 control-label">기초자산ID</label>
+        <div class="col-sm-2">
+          <button type="button" id="insIdHref" class="btn btn-outline-dark">{{ get_value(model, 'insIdHref')}}</button>
+        </div>
+        <label for="insNm" class="col-sm-2 control-label">기초자산명</label>
+        <div class="col-sm-2">
+          <input type="text" class="form-control" id="insNm" value="{{ get_value(model, 'underlying.insNm')}}">
+        </div>
+        <div class="form-group">
+            <div class="checkbox">
+              <label><input type="checkbox"> <a href="#matdtList">같은 기초자산의 월물 정보 조회</a></label>
+            </div>
+        </div>
+	  </div>
+
+
+	  <div class="form-group">
+        <label for="matDt" class="col-sm-2 control-label">만기일자</label>
+	    <div class="col-sm-2">
+	      <input type="text" class="form-control" id="matDt" value="{{ get_value(model, 'matDt')}}">
+	    </div>
+          <label for="matdtIdx" class="col-sm-2 control-label">월물 정보</label>
+	    <div class="col-sm-2">
+	      <input type="text" class="form-control" disabled="disabled" id="matdtIdx" value="{{ get_value(model, 'matdtIdx')}}">
+	    </div>
+        <div class="checkbox">
+          <label><input type="checkbox"> <a href="#strikeList"> (1) 근월물, (2) 차월물 ... (-1) 원월물</a></label>
+	    </div>
+	  </div>
+
+      <div class="form-group">
+        <label for="strike" class="col-sm-2 control-label">행사가</label>
+        <div class="col-sm-2">
+          <input type="text" class="form-control" id="strike" value="{{ get_value(model, 'strike')}}">
+        </div>
+	  </div>
+
+
+
+	</form>
+</div>
+
+
+<fieldset class="group-border">
+  <legend class="group-border"><h2>Price Info</h2></legend>
+
+
+
+  <div class="row">
+    <div class="col-lg-4">
+      <div class="form-group">
+            <label for="price" class="control-label">기준가</label>
+            <input type="text" class="form-control" id="price" disabled="disabled" value="{{ get_value(model, 'price')}}">
+      </div>
+    </div>
+    <div class="col-lg-4">
+      <div class="form-group">
+        <label for="prevTransPrc" class="control-label">전일거래대금</label>
+        <input type="text" class="form-control" id="prevTransPrc" disabled="disabled" value="{{ get_value(model, 'prevTransPrc')}}">
+      </div>
+    </div>
+    <div class="col-lg-4">
+        <div class="form-group">
+            <label for="prevTransAmt" class="control-label">전일체결수량</label>
+            <input type="text" class="form-control" id="prevTransAmt" disabled="disabled" value="{{ get_value(model, 'prevTransAmt')}}">
+      </div>
+    </div>
+  </div>
+
+
+
+  <div class="container-fluid" style="margin: 15px 25px 15px 0px;">
+        <div>
+             <div class="btn-group btn-group-justified">
+                <table class="table table-hover text-nowrap">
+                  <thead>
+                    <tr>
+                      <th scope="col"></th>
+                      <th scope="col">가격제한 1단계</th>
+                      <th scope="col">가격제한 2단계</th>
+                      <th scope="col">가격제한 3단계</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    <tr>
+                      <th scope="row">상한가</th>
+                      <td align="left"><span class="text-success">{{ get_value(model, 'upPrice1')}} </span></td>
+                      <td align="left"><span class="text-success">{{ get_value(model, 'upPrice2')}} </span></td>
+                      <td align="left"><span class="text-success">{{ get_value(model, 'upPrice3')}} </span></td>
+                    </tr>
+                    <tr>
+                      <th scope="row">하한가</th>
+                      <td align="left"><span class="text-danger">{{ get_value(model, 'lowPrice1')}} </span></td>
+                      <td align="left"><span class="text-danger">{{ get_value(model, 'lowPrice2')}} </span></td>
+                      <td align="left"><span class="text-danger">{{ get_value(model, 'lowPrice3')}} </span></td>
+                    </tr>
+                  </tbody>
+                </table>
+            </div>
+        </div>
+
+
+
+  </div>
+
+</fieldset>
+
+
+
+
+
+<div class="container" id="matdtList" style="margin: 15px 25px 15px 0px;">
+	<h3>월물 정보 리스트</h3>
+    <hr>
+
+    <ul class="form-group">
+        <li style="color:green;"><h4>해당 종목의 기초자산과 같은 종목을 대상으로 만기일을 순차적으로 보여줍니다.</h4></li>
+    </ul>
+
+    <div class="row">
+        <div>
+            <div class="col-lg-3">
+              <div class="form-group">
+                <label class="control-label">기초자산ID</label>
+                <input class="form-control" disabled="disabled" value="{{ get_value(model, 'insId') }}">
+              </div>
+            </div>
+            <div class="col-lg-3">
+              <div class="form-group">
+                <label class="control-label">기초자산명</label>
+                <input class="form-control" disabled="disabled" value="{{ get_value(model, 'underlying.insNm')}}">
+              </div>
+            </div>
+
+    </div>
+        </div>
+    </div>
+
+    <div data-type="subview" data-subview="/future_subview/?insId={{ get_value(model, 'insId')}}&baseDt={{ get_value(model, 'baseDt')}}&matDt={{ get_value(model, 'matDt')}}">
+</div>
+
+
+
+
+{% endblock %}
+
