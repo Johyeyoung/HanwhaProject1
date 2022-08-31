@@ -13,7 +13,7 @@ class MetaData:
     def setPath(self, filepath):
         pass
 
-    # 이 함수는 특정 파일에 존재하는 모든 TR 목록을 가져 옵니다.
+    # 이 함수는 특정 파일에 존재하는 모든 TR 목록을 가져옵니다.
     def getTrInfoByFile(self, filepath=None):
         try:
             tr_df = pd.read_excel(filepath, sheet_name='TR목록', usecols='B,C,E', names=['TR명','DATA구분','Size'])
@@ -24,7 +24,7 @@ class MetaData:
         except Exception as e:
             print(e)
 
-    # 이 함수는 특정 디렉토리 밑의 여러 파일의 전체 TR 목록을 가져 옵니다.
+    # 이 함수는 특정 디렉토리 밑의 여러 파일의 전체 TR 목록을 가져옵니다.
     def getTrInfoByDirectory(self, directory):
         try:
             for file in os.listdir(directory):
@@ -59,7 +59,7 @@ class MetaData:
             start = end
         return spec_df, spec_dict
 
-    # 이 함수는 특정 폴더 밑에 존재하는 모든 파일의 SPEC 정보를 가져 옵니다.
+    # 이 함수는 특정 폴더 밑에 존재하는 모든 파일의 SPEC 정보를 가져옵니다.
     def getSpecInfoByDirectory(self, directory):
         try:
             for file in os.listdir(directory):
@@ -76,7 +76,7 @@ class MetaData:
         trSpecInfo = self.totalSpecDict[trNm]
         return trNm, trSpecInfo
 
-    # 이 함수는 특정 word를 포함하고 있는 SPEC 정보를 가져 옵니다.
+    # 이 함수는 특정 word를 포함하고 있는 SPEC 정보를 가져옵니다.
     def getSpecInfoBySubstr(self, substr, df=None):
         df = df if isinstance(df, pd.DataFrame) else self.totalSpecDf
         substr = [f'(?=.*{_str}+)' for _str in substr.split(',')]
