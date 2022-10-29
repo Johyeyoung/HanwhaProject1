@@ -38,12 +38,12 @@ self.getTradingCost = function(isinCode, minutes){
           	let minutesAmount = resultMap.get('amount');
   			let minutesPnl = resultMap.get('tRealized');
           	tradingCost = minutesAmount + minutesPnl;
+          	console.log(traingCost);
         }
     	else
     		tradingCost = 0;
-      
-  
   });
+  console.log(tradingCost);
   return tradingCost;
 };
 
@@ -67,12 +67,11 @@ self.updateTradingCost = function(itemList, minutes){
 
 /// 자동 갱신시 실행해야되는 코드 
 let refresh = function(){
-  	let itemList = self.dataVar;
-	updateTradingCost(itemList, 1);
-  	updateTradingCost(itemList, 5);
-	updateTradingCost(itemList, 15);
-  	self.ReactiveVar.set(self.dataVar);  // 여기서 최종적으로 업뎃된 데이터 테이블에 반영
-  	console.log(itemList);
+	updateTradingCost(self.dataVar, 1);
+  	updateTradingCost(self.dataVar, 5);
+	updateTradingCost(self.dataVar, 15);
+  	//self.ReactiveVar.set(self.dataVar);  // 여기서 최종적으로 업뎃된 데이터 테이블에 반영
+  	console.log(self.dataVar);
 }
 
 
