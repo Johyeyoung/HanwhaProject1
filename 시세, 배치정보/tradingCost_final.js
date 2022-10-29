@@ -36,7 +36,7 @@ self.getTradingCost = function(isinCode, minutes){
   Promise.all(promises).then(() => {
         if (resultMap.has('amount') && resultMap.has('tRealized')){
           	let minutesAmount = resultMap.get('amount');
-  			let minutesPnl = resultMap.get('tRealized');
+		let minutesPnl = resultMap.get('tRealized');
           	tradingCost.set(isinCode, minutesAmount + minutesPnl);
         }
     	else
@@ -50,11 +50,11 @@ self.getTradingCost = function(isinCode, minutes){
 
 self.updateTradingCost = function(itemList, minutes){
   
-  	viewData = []; 
-    for (item of itemList){
-        item['costPer'+ minutes] = self.getTradingCost(item.isinCode, minutes);
-      	viewData.push(item);
-    }
+	viewData = []; 
+	for (item of itemList){
+		item['costPer'+ minutes] = self.getTradingCost(item.isinCode, minutes);
+		viewData.push(item);
+	}
   
 	self.dataVar = viewData; 
 };
