@@ -1,4 +1,3 @@
-
 self.dataVar = [{isinCode:'KRS1'}, {isinCode:'KRS2'}, {isinCode:'KRS3'}, {isinCode:'KRS4'}, {isinCode:'KRS5'}];
 // 최종적으로 보여주는 데이터를 담는 곳 
 
@@ -36,8 +35,8 @@ self.getTradingCost = function(isinCode, minutes){
   );
   Promise.all(promises).then(() => {
         if (resultMap.has('amount') && resultMap.has('tRealized')){
-          	let minutesAmount = resultMap.get(isinCode);
-  			let minutesPnl = resultMap.get(isinCode);
+          	let minutesAmount = resultMap.get('amount');
+  			let minutesPnl = resultMap.get('tRealized');
           	tradingCost = minutesAmount + minutesPnl;
         }
     	else
@@ -76,7 +75,7 @@ let refresh = function(){
 	updateTradingCost(itemList, 1);
   	updateTradingCost(itemList, 5);
 	updateTradingCost(itemList, 15);
-  	selt.ReactiveVar.set(self.dataVar);  // 여기서 최종적으로 업뎃된 데이터 테이블에 반영
+  	self.ReactiveVar.set(self.dataVar);  // 여기서 최종적으로 업뎃된 데이터 테이블에 반영
   	console.log(itemList);
 }
 
