@@ -41,20 +41,20 @@ self.getTradingCost = async function(isinCode, minutes){
     		tradingCost = 0;
   });
   //console.log(tradingCost.get(isinCode));
-  return tradingCost;
+  awawit return tradingCost;
 };
 
 
 
-self.updateTradingCost = function(itemList, minutes){
+self.updateTradingCost = async function(itemList, minutes){
   
 	viewData = []; 
 	for (item of itemList){
-		item['costPer'+ minutes] = self.getTradingCost(item.isinCode, minutes);
+		item['costPer_'+ minutes] = await self.getTradingCost(item.isinCode, minutes);
 		viewData.push(item);
 	}
   
-	self.dataVar = viewData; 
+	self.dataVar = viewData;
 };
 
 
@@ -63,10 +63,10 @@ self.updateTradingCost = function(itemList, minutes){
 
 
 /// 자동 갱신시 실행해야되는 코드 
-let refresh = function(){
-	updateTradingCost(self.dataVar, 1);
-  	updateTradingCost(self.dataVar, 5);
-	updateTradingCost(self.dataVar, 15);
+let refresh = async function(){
+	await updateTradingCost(self.dataVar, 1);
+  	await updateTradingCost(self.dataVar, 5);
+	await updateTradingCost(self.dataVar, 15);
   	//self.ReactiveVar.set(self.dataVar);  // 여기서 최종적으로 업뎃된 데이터 테이블에 반영
   	console.log(self.dataVar);
 }
