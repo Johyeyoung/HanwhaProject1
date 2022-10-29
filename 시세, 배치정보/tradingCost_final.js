@@ -3,19 +3,17 @@ self.dataVar = [{isinCode:'KRS1'}, {isinCode:'KRS2'}, {isinCode:'KRS3'}, {isinCo
 
 self.getAmountPerMinutes = function(isinCode, minutes){
   	return new Promise((resolve, reject) => {
-  		resolve(isinCode + '_Amount_' + minutes);
+  		resolve(isinCode + '_Amount_(' + minutes + ')');
     });
 };
 self.getPnlPerMinutes = function(isinCode, minutes){
   	return new Promise((resolve, reject) => {
-  		resolve(isinCode + '_Pnl_' + minutes);
+  		resolve(isinCode + '_Pnl_(' + minutes + ')');
     });
 };
 
 
-
-
-self.getTradingCost = function(isinCode, minutes){
+self.getTradingCost = async function(isinCode, minutes){
         	
   let tradingCost = new Map();
   let promises = [];
