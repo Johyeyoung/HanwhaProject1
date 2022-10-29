@@ -42,13 +42,9 @@ self.getTradingCost = function(isinCode, minutes){
     	else
     		tradingCost = 0;
       
-  return tradingCost;
+  
   });
-
-  
-
-  
-
+  return tradingCost;
 };
 
 
