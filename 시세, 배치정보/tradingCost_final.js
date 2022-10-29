@@ -17,7 +17,7 @@ self.getPnlPerMinutes = function(isinCode, minutes){
 
 self.getTradingCost = function(isinCode, minutes){
         	
-  let tradingCost;
+  let tradingCost = new Map();
   let promises = [];
   let resultMap = new Map();
   
@@ -37,13 +37,12 @@ self.getTradingCost = function(isinCode, minutes){
         if (resultMap.has('amount') && resultMap.has('tRealized')){
           	let minutesAmount = resultMap.get('amount');
   			let minutesPnl = resultMap.get('tRealized');
-          	tradingCost = minutesAmount + minutesPnl;
-          	console.log(traingCost);
+          	tradingCost.set(isinCode, minutesAmount + minutesPnl);
         }
     	else
     		tradingCost = 0;
   });
-  console.log(tradingCost);
+  //console.log(tradingCost.get(isinCode));
   return tradingCost;
 };
 
