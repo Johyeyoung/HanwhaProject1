@@ -1,5 +1,4 @@
 
-
 self.dataVar = [{isinCode:'KRS1'}, {isinCode:'KRS2'}, {isinCode:'KRS3'}, {isinCode:'KRS4'}, {isinCode:'KRS5'}];
 // 최종적으로 보여주는 데이터를 담는 곳 
 
@@ -9,12 +8,12 @@ self.minutesPnlMap = new Map();
 
 self.getAmountPerMinutes = function(isinCode, minutes){
   	return new Promise((resolve, reject) => {
-  		resolve(isinCode + '_Amount_' + minutes);
+  		resolve(isinCode + '_Amount_(' + minutes + ')');
     });
 };
 self.getPnlPerMinutes = function(isinCode, minutes){
   	return new Promise((resolve, reject) => {
-  		resolve(isinCode + '_Pnl_' + minutes);
+  		resolve(isinCode + '_Pnl_(' + minutes + ')');
     });
 };
 
@@ -23,8 +22,8 @@ self.getPnlPerMinutes = function(isinCode, minutes){
 
 self.getTradingCost = function(isinCode){
   
-  if (!self.minutesAmountMap.has(isinCode) || !self.minutesPnlMap.has(isinCode))
-    return 0;
+//  if (!self.minutesAmountMap.has(isinCode) || !self.minutesPnlMap.has(isinCode))
+//    return 0;
   
   let amountPerMinute = self.minutesAmountMap.get(isinCode);
   let pnlPerMinute = self.minutesPnlMap.get(isinCode);
@@ -62,10 +61,10 @@ self.updateTradingCost = function(itemList, minutes){
         for (let item of itemList){
           	item['costPer'+ minutes] = self.getTradingCost(item.isinCode);
           	viewData.push(item);
-          	console.log(viewData);
+          	
 
         }
-      
+        console.log(viewData);
       	self.dataVar = viewData;
       	
 	});
@@ -78,19 +77,22 @@ self.updateTradingCost = function(itemList, minutes){
 
 
 /// 자동 갱신시 실행해야되는 코드 
-let refresh = function(){
-  	let itemList = self.dataVar;
-	updateTradingCost(itemList, 1);
-  	updateTradingCost(itemList, 5);
-	updateTradingCost(itemList, 15);
-  	selt.ReactiveVar.set(self.dataVar);  // 여기서 최종적으로 업뎃된 데이터 테이블에 반영
-  	console.log(itemList);
+let refresh = async function(){
+	await updateTradingCost(self.dataVar, 1);
+    	console.log('hello');
+  	//console.log(self.dataVar);
+
+  	await updateTradingCost(self.dataVar, 5);
+      	console.log('bye');
+  	//console.log(self.dataVar);
+
+	await updateTradingCost(self.dataVar, 15);
+        	console.log('end');
+  	//console.log(self.dataVar);
+
+  	//selt.ReactiveVar.set(self.dataVar);  // 여기서 최종적으로 업뎃된 데이터 테이블에 반영
 }
 
 
 
 refresh();
-
-
-
-
