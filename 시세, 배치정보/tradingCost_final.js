@@ -2,10 +2,6 @@
 self.dataVar = [{isinCode:'KRS1'}, {isinCode:'KRS2'}, {isinCode:'KRS3'}, {isinCode:'KRS4'}, {isinCode:'KRS5'}];
 // 최종적으로 보여주는 데이터를 담는 곳 
 
-self.minutesAmountMap = new Map();
-self.minutesPnlMap = new Map();
-
-
 self.getAmountPerMinutes = function(isinCode, minutes){
   	return new Promise((resolve, reject) => {
   		resolve(isinCode + '_Amount_' + minutes);
