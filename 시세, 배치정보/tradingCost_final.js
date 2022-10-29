@@ -1,0 +1,89 @@
+
+self.dataVar = [{isinCode:'KRS1'}, {isinCode:'KRS2'}, {isinCode:'KRS3'}, {isinCode:'KRS4'}, {isinCode:'KRS5'}];
+// 최종적으로 보여주는 데이터를 담는 곳 
+
+self.minutesAmountMap = new Map();
+self.minutesPnlMap = new Map();
+
+
+self.getAmountPerMinutes = function(isinCode, minutes){
+  	return new Promise((resolve, reject) => {
+  		resolve(isinCode + '_Amount_' + minutes);
+    });
+};
+self.getPnlPerMinutes = function(isinCode, minutes){
+  	return new Promise((resolve, reject) => {
+  		resolve(isinCode + '_Pnl_' + minutes);
+    });
+};
+
+
+
+
+self.getTradingCost = function(isinCode, minutes){
+        	
+  let tradingCost;
+  let promises = [];
+  let resultMap = new Map();
+  
+  promises.push(
+    self.getAmountPerMinutes(isinCode, minutes).then((value) => {
+      resultMap.set('amount', value);
+      //resultMap.set('amount' value['Amount'])
+    })
+  );
+  promises.push(
+    self.getPnlPerMinutes(isinCode, minutes).then((value) =>{
+      resultMap.set('tRealized', value);
+      //resultMap.set('amount' value['tRealized'])
+    })
+  );
+  Promise.all(promises).then(() => {
+        if (resultMap.has('amount') && resultMap.has('tRealized')){
+          	let minutesAmount = resultMap.get(isinCode);
+  			let minutesPnl = resultMap.get(isinCode);
+          	tradingCost = minutesAmount + minutesPnl;
+        }
+    	else
+    		tradingCost = 0;
+      
+  return tradingCost;
+  });
+
+  
+
+  
+
+};
+
+
+
+self.updateTradingCost = function(itemList, minutes){
+  
+  	viewData = []; 
+    for (item of itemList){
+        item['costPer'+ minutes] = self.getTradingCost(item.isinCode, minutes);
+      	viewData.push(item);
+    }
+  
+	self.dataVar = viewData; 
+};
+
+
+
+
+
+
+/// 자동 갱신시 실행해야되는 코드 
+let refresh = function(){
+  	let itemList = self.dataVar;
+	updateTradingCost(itemList, 1);
+  	updateTradingCost(itemList, 5);
+	updateTradingCost(itemList, 15);
+  	selt.ReactiveVar.set(self.dataVar);  // 여기서 최종적으로 업뎃된 데이터 테이블에 반영
+  	console.log(itemList);
+}
+
+
+
+refresh();
