@@ -20,53 +20,56 @@ self.getPnlPerMinutes = function(isinCode, minutes){
 
 
 
-self.getTradingCost = function(isinCode){
+self.getTradingCost = function(isinCode, minutes){
   
 //  if (!self.minutesAmountMap.has(isinCode) || !self.minutesPnlMap.has(isinCode))
 //    return 0;
-  
-  let amountPerMinute = self.minutesAmountMap.get(isinCode);
-  let pnlPerMinute = self.minutesPnlMap.get(isinCode);
+  let key = isinCode + '_' + minutes
+  let amountPerMinute = self.minutesAmountMap.get(key);
+  let pnlPerMinute = self.minutesPnlMap.get(key);
   return amountPerMinute + pnlPerMinute;
 };
 
 
 
-self.updateTradingCost = function(itemList, minutes){
+self.updateTradingCost = function(itemList, minutesList){
   
   	// 정보를 얻는 부분
-  self.minutesAmountMap = new Map();
-  self.minutesPnlMap = new Map();
+  	self.minutesAmountMap = new Map();
+  	self.minutesPnlMap = new Map();
 	let promises = [];
   
-    for (item of itemList){
-      	let isinCode = item.isinCode;
-        promises.push(
-          self.getAmountPerMinutes(isinCode, minutes).then((value) => {
-            self.minutesAmountMap.set(isinCode, value);
-          })
-        );
-        promises.push(
-          self.getPnlPerMinutes(isinCode, minutes).then((value) =>{
-            self.minutesPnlMap.set(isinCode, value);
-          })
-        );
+  
+  	for (let minutes of minutesList){
+          for (let item of itemList){
+                let isinCode = item.isinCode;
+                let key = isinCode + '_' + minutes;
+                promises.push(
+                  self.getAmountPerMinutes(isinCode, minutes).then((value) => {
+                    self.minutesAmountMap.set(key, value);
+                  })
+                );
+                promises.push(
+                  self.getPnlPerMinutes(isinCode, minutes).then((value) =>{
+                    self.minutesPnlMap.set(key, value);
+                  })
+                );
+          }
     }
+    
   	      	
 
   	// 정보를 다 가져와서 처리하는 부분
     Promise.all(promises).then(() => {
-      	viewData = [];
-      
-        for (let item of itemList){
-          	item['costPer'+ minutes] = self.getTradingCost(item.isinCode);
-          	viewData.push(item);
-          	
-
+      	//viewData = [];
+      	for (let minutes of minutesList){
+            for (let item of itemList){
+                item['costPer'+ minutes] = self.getTradingCost(item.isinCode, minutes);
+                //viewData.push(item);
+            }
         }
-        console.log(viewData);
-      	self.dataVar = viewData;
-      	
+        console.log(itemList);
+      	self.dataVar = itemList;//viewData;
 	});
   
 };
@@ -77,17 +80,8 @@ self.updateTradingCost = function(itemList, minutes){
 
 
 /// 자동 갱신시 실행해야되는 코드 
-let refresh = async function(){
-	await updateTradingCost(self.dataVar, 1);
-    	console.log('hello');
-  	//console.log(self.dataVar);
-
-  	await updateTradingCost(self.dataVar, 5);
-      	console.log('bye');
-  	//console.log(self.dataVar);
-
-	await updateTradingCost(self.dataVar, 15);
-        	console.log('end');
+let refresh = function(){
+	updateTradingCost(self.dataVar, [1, 5, 15]);
   	//console.log(self.dataVar);
 
   	//selt.ReactiveVar.set(self.dataVar);  // 여기서 최종적으로 업뎃된 데이터 테이블에 반영
