@@ -36,6 +36,7 @@ Template.TradingLimitViewerTmpl.onCreated(function () {
 
     self.dataOption = new ReactiveVar(null);
     self.dataVar = new ReactiveVar([]);
+    self.dataList = [];
     self.optionBidAskAmountMap = new Map();
 
     self.basketDataOption = new ReactiveVar(null);
@@ -111,7 +112,8 @@ Template.TradingLimitViewerTmpl.onCreated(function () {
 
     self.updateTradingCost = function () {
         let promises = [];
-        let itemList = self.dataVar.get();
+        let itemList = self.dataList;
+        if (itemList.length === 0) return;
         for (let minutes of self.minutesList) {
             for (let item of itemList) {
                 let isinCode = item.isinCode;
@@ -135,7 +137,8 @@ Template.TradingLimitViewerTmpl.onCreated(function () {
                     let toColumn = self.getJoinString('costPer', minutes);
                     item[toColumn] = self.getTradingCost(item.isinCode, minutes);
                 }
-            self.dataVar.set(itemList);
+            self.itemList = itemList;
+            self.dataVar.set(self.itemList);
         });
     };
 
@@ -547,7 +550,9 @@ Template.TradingLimitViewerTmpl.onCreated(function () {
 
             list.push(data);
         }
+        self.dataList = list;
         self.dataVar.set(list);
+        updateTradingCost();
     };
 
     self.clearTable = function () {
