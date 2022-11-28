@@ -35,155 +35,20 @@ public class 차세대_선물_종목정보Feed extends Feed implements MongoDBDa
     public 차세대_선물_종목정보Feed(NextFeedTRCode trCode, byte[] packet) {
         super(trCode, packet);
 
-        //한글이 있는 피드의 경우 line.substring 사용시 잘못 파싱될 우려가 있으니 parseStr(rawPacket)을 사용
-        //한글이 없는 경우라면 byte를 String으로 변환 후 substring 을 사용하는게 더 효율적임(byte->String 연산이 substring보다 무거움)
-//        String line = new String(rawPacket);
-
-        String trCodeStr = 차세대_선물_종목정보.trCode.parser().parseStr(rawPacket, "trCode");
-        String isinCode = 차세대_선물_종목정보.isinCode.parser().parseStr(rawPacket, "isinCode");
-        if (isinCode == null || isinCode.equals(PredefinedIsinCode.MSG_END_CODE))
-            return;
-
-        String productName = getProdName();
-        String underlyingIsinCode = new String(차세대_선물_종목정보.underlyingIsinCode.parser().parseByte(rawPacket));
-        if (underlyingIsinCode.equals("KR49999999KP"))
-            underlyingIsinCode = "KRD020020016";
-        else if (underlyingIsinCode.equals("KRD020021397"))
-            underlyingIsinCode = "KRD020021394";
-        double 기준가 = 차세대_선물_종목정보.기준가.parser().parseDouble(rawPacket);
-
-        int 잔존일수 = 차세대_선물_종목정보.잔존일수.parser().parseInt(rawPacket);
-        double 전일종가 = 차세대_선물_종목정보.전일종가.parser().parseDoubleWithLeadingSign(rawPacket);
-        double 전일시가 = 차세대_선물_종목정보.전일시가.parser().parseDoubleWithLeadingSign(rawPacket);
-        double 전일고가 = 차세대_선물_종목정보.전일고가.parser().parseDoubleWithLeadingSign(rawPacket);
-        double 전일저가 = 차세대_선물_종목정보.전일저가.parser().parseDoubleWithLeadingSign(rawPacket);
-
-        double 가격제한1단계상한가 = 차세대_선물_종목정보.가격제한1단계상한가.parser().parseDoubleWithLeadingSign(rawPacket);
-        double 가격제한1단계하한가 = 차세대_선물_종목정보.가격제한1단계하한가.parser().parseDoubleWithLeadingSign(rawPacket);
-        double 가격제한2단계상한가 = 차세대_선물_종목정보.가격제한2단계상한가.parser().parseDoubleWithLeadingSign(rawPacket);
-        double 가격제한2단계하한가 = 차세대_선물_종목정보.가격제한2단계하한가.parser().parseDoubleWithLeadingSign(rawPacket);
-        double 가격제한3단계상한가 = 차세대_선물_종목정보.가격제한3단계상한가.parser().parseDoubleWithLeadingSign(rawPacket);
-        double 가격제한3단계하한가 = 차세대_선물_종목정보.가격제한3단계하한가.parser().parseDoubleWithLeadingSign(rawPacket);
-
-        int 만기일자 = 차세대_선물_종목정보.만기일자.parser().parseInt(rawPacket);
-        String 기초자산ID = 차세대_선물_종목정보.기초자산ID.parser().parseStr(rawPacket, "");
-        String 소속상품군 = "";//SF/SO에서만 유효한 field
-        String 기초자산시장ID = 차세대_선물_종목정보.기초자산시장ID.parser().parseStr(rawPacket, "");
-        long 미결제한도수량 = 차세대_선물_종목정보.미결제한도수량.parser().parseLong(rawPacket);
-        long 전일거래수량 = 차세대_선물_종목정보.전일거래수량.parser().parseLong(rawPacket);
-        double 전일거래대금 = 차세대_선물_종목정보.전일거래대금.parser().parseDouble(rawPacket);
-        long 전일미결제약정수량 = 차세대_선물_종목정보.전일미결제약정수량.parser().parseLong(rawPacket);
-
-        // 무위험지표금리선물이 아니면 priceDivider를 100으로 설정
-        var dut = DerivativesUnderlyingType.getTypeFromDutCode(기초자산ID);
         int priceDivider;
         if (dut == DerivativesUnderlyingType.RFR)
             priceDivider = (int) Math.pow(10, rfrPriceDecimalPoint);
         else
             priceDivider = (int) Math.pow(10, priceDecimalPoint);
 
-
-        double CD금리;
-        //지수선물의 겨우 CD값이 들어오지만 섹터 선물의 경우는 Filler이기 때문에 예외 처리 필요
-        try {
-            if (차세대_선물_종목정보.CD금리.parser().parseStr(rawPacket, "").trim().equals(""))
-                CD금리 = 0;
-            else
-                CD금리 = 차세대_선물_종목정보.CD금리.parser().parseDouble(rawPacket);
-        } catch (NumberFormatException nfe) {
-            CD금리 = 0;
-        }
-        double 거래단위 = 차세대_선물_종목정보.거래단위.parser().parseDouble(rawPacket);
-        double 거래승수 = 차세대_선물_종목정보.거래승수.parser().parseDouble(rawPacket);
-        Integer ATM구분 = 차세대_선물_종목정보.ATM구분코드.parser().parseInt(rawPacket);
-
-
-        String spreadRecentIsin = new String(차세대_선물_종목정보.spreadRecentCode.parser().parseByte(rawPacket));
-        String spreadNext = new String(차세대_선물_종목정보.spreadNextCode.parser().parseByte(rawPacket));
-
-        Date 만기 = null;
-        try {
-            만기 = DateCenter.Instance.parse_yyyyMMdd(만기일자 + "");
-        } catch (ParseException e) {
-            e.printStackTrace();
-        }
-
         doc = new Document();
-        doc.put("isinCode", isinCode);
-        doc.put("기준가", 기준가);
-        doc.put("type", trCodeStr);
-        if (productName != null)
-            doc.put("productName", productName);
-
-        doc.put("underlyingIsinCode", underlyingIsinCode);
-        doc.put("spreadRecentIsin", spreadRecentIsin);
-        doc.put("spreadNext", spreadNext);
-        doc.put("date", TimeCenter.Instance.getDateAsDateType());
-
-        doc.put("matDate", 만기일자);
-        if (만기 != null)
-            doc.put("만기", 만기);
-
         doc.put("priceDivider", priceDivider);
-        doc.put("기초자산ID", 기초자산ID);
-        doc.put("소속상품군", 소속상품군);
-        doc.put("기초자산시장ID", 기초자산시장ID);
-        doc.put("미결제한도수량", 미결제한도수량);
-        doc.put("전일거래수량", 전일거래수량);
-        doc.put("전일거래대금", 전일거래대금);
-        doc.put("전일미결제약정수량", 전일미결제약정수량);
-        doc.put("CD금리", CD금리);
-        doc.put("거래단위", 거래단위);
-        doc.put("multiplier", 거래승수);
-        doc.put("ATM구분", ATM구분);
-
-        doc.put("잔존일수", 잔존일수);
-        doc.put("전일종가", 전일종가);
-        doc.put("전일고가", 전일고가);
-        doc.put("전일시가", 전일시가);
-        doc.put("전일저가", 전일저가);
-
-        doc.put("가격제한1단계상한가", 가격제한1단계상한가);
-        doc.put("가격제한1단계하한가", 가격제한1단계하한가);
-        doc.put("가격제한2단계상한가", 가격제한2단계상한가);
-        doc.put("가격제한2단계하한가", 가격제한2단계하한가);
-        doc.put("가격제한3단계상한가", 가격제한3단계상한가);
-        doc.put("가격제한3단계하한가", 가격제한3단계하한가);
-
-        doc.put("date", TimeCenter.Instance.getDateAsDateType());
-        doc.put("lastUpdate", new Date());
 
         query = new Document();
         query.put("isinCode", isinCode);
         //DefaultLogger.logger.debug("선물 종목 정보 업데이트 : {}" ,  ob.toString());
 
-        if(TempConf.UPDATE_FROM_FEED) {
-            FuturesInfo futuresInfo = new FuturesInfo();
-            futuresInfo.isinCode = isinCode;
-            futuresInfo.productName = productName;
-            futuresInfo.underlyingIsinCode = underlyingIsinCode;
-            futuresInfo.기준가 = 기준가;
-            futuresInfo.type = trCodeStr;
-            futuresInfo.date = TimeCenter.Instance.getDateAsDateType();
-            futuresInfo.만기 = 만기;
-            futuresInfo.matDate = String.valueOf(만기일자);
-            futuresInfo.기초자산ID = DerivativesUnderlyingType.getTypeFromDutCode(기초자산ID);
-            futuresInfo.prodClassType = DerivativesProdClassType.getTypeFromCode(futuresInfo.기초자산ID);
-            futuresInfo.기초자산시장ID = DerivativesUnderlyingMarketType.getTypeFromCode(기초자산시장ID); //기초자산시장ID;
-            futuresInfo.CD금리 = CD금리;
-            futuresInfo.거래단위 = 거래단위;
-            futuresInfo.multiplier = 거래승수;
-            futuresInfo.ATM구분 = ATM구분;
-            futuresInfo.priceDivider = priceDivider;
-            futuresInfo.spreadRecentIsin = spreadRecentIsin;
-            futuresInfo.spreadNext = spreadNext;
-            futuresInfo.가격제한1단계상한가 = 가격제한1단계상한가;
-            futuresInfo.가격제한1단계하한가 = 가격제한1단계하한가;
-            //        매칭정보 없음
-            //        futuresInfo.strikePrice = strikePrice;
-            //        futuresInfo.결제주 = 결제주;
-            FuturesInfoCenter.Instance.updateFromFeed(futuresInfo);
-        }
+       
     }
 
     // 가격은 9자리 (정수 6, 소수 3)로 파싱
